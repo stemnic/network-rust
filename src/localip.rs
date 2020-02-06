@@ -12,8 +12,8 @@ pub fn get_localip() -> Result<IpAddr> {
     let old_ip = local_ip.clone();
     match old_ip {
         None => {
-            let socket = try!(TcpStream::connect("8.8.8.8:53"));
-            let ip = try!(socket.local_addr()).ip();
+            let socket = TcpStream::connect("8.8.8.8:53")?;
+            let ip = socket.local_addr()?.ip();
             *local_ip = Some(ip);
             Ok(ip)
         }

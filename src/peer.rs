@@ -55,31 +55,31 @@ impl<T> PeerUpdate<T>
 
 impl<T: fmt::Display> fmt::Display for PeerUpdate<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "Peer update:\n"));
+        write!(f, "Peer update:\n")?;
         match self.peers.len() {
-            0 => try!(write!(f, "\tpeers: []\n")),
-            1 => try!(write!(f, "\tpeers: [{}]\n", self.peers[0])),
+            0 => write!(f, "\tpeers: []\n")?,
+            1 => write!(f, "\tpeers: [{}]\n", self.peers[0])?,
             n @ _ => {
-                try!(write!(f, "\tpeers: [{},\n", self.peers[0]));
+                write!(f, "\tpeers: [{},\n", self.peers[0])?;
                 for i in 1..n-1 {
-                    try!(write!(f, "\t        {},\n", self.peers[i]));
+                    write!(f, "\t        {},\n", self.peers[i])?;
                 }
-                try!(write!(f, "\t        {}]\n", self.peers[n-1]));
+                write!(f, "\t        {}]\n", self.peers[n-1])?;
             }
         }
         match self.new {
-            Some(ref new) => try!(write!(f, "\tnew:   [{}]\n", new)),
-            None => try!(write!(f, "\tnew:   [None]\n"))
+            Some(ref new) => write!(f, "\tnew:   [{}]\n", new)?,
+            None => write!(f, "\tnew:   [None]\n")?
         }
         match self.lost.len() {
-            0 => try!(write!(f, "\tlost:  []\n")),
-            1 => try!(write!(f, "\tlost:  [{}]\n", self.peers[0])),
+            0 => write!(f, "\tlost:  []\n")?,
+            1 => write!(f, "\tlost:  [{}]\n", self.peers[0])?,
             n @ _ => {
-                try!(write!(f, "\tlost:  [{},\n", self.peers[0]));
+                write!(f, "\tlost:  [{},\n", self.peers[0])?;
                 for i in 1..n-1 {
-                    try!(write!(f, "\t        {},\n", self.peers[i]));
+                    write!(f, "\t        {},\n", self.peers[i])?;
                 }
-                try!(write!(f, "\t        {}]\n", self.peers[n-1]));
+                write!(f, "\t        {}]\n", self.peers[n-1])?;
             }
         }
         Ok(())
@@ -94,11 +94,11 @@ pub struct PeerTransmitter {
 impl PeerTransmitter {
     pub fn new(port: u16) -> io::Result<Self> {
         let conn = {
-            let udp = try!(UdpBuilder::new_v4());
-            try!(udp.reuse_address(true));
-            let socket = try!(udp.bind("0.0.0.0:0"));
-            try!(socket.set_broadcast(true));
-            try!(socket.connect(("255.255.255.255", port)));
+            let udp = UdpBuilder::new_v4()?;
+            udp.reuse_address(true)?;
+            let socket = udp.bind("0.0.0.0:0")?;
+            socket.set_broadcast(true)?;
+            socket.connect(("255.255.255.255", port))?;
             socket
         };
         Ok(PeerTransmitter {
@@ -121,7 +121,7 @@ impl PeerTransmitter {
         where T: serde::ser::Serialize,
     {
         let serialized = serde_json::to_string(&data).unwrap();
-        try!(self.conn.send(serialized.as_bytes()));
+        self.conn.send(serialized.as_bytes())?;
         Ok(())
     }
 
@@ -148,10 +148,10 @@ pub struct PeerReceiver {
 impl PeerReceiver {
     pub fn new(port: u16) -> io::Result<Self> {
         let conn = {
-            let udp = try!(UdpBuilder::new_v4());
-            try!(udp.reuse_address(true));
-            let socket = try!(udp.bind(("255.255.255.255", port)));
-            try!(socket.set_broadcast(true));
+            let udp = UdpBuilder::new_v4()?;
+            udp.reuse_address(true)?;
+            let socket = udp.bind(("255.255.255.255", port))?;
+            socket.set_broadcast(true)?;
             socket
         };
         Ok(PeerReceiver{
@@ -163,7 +163,7 @@ impl PeerReceiver {
         where T: serde::de::Deserialize, 
     {
         let mut buf = [0u8; 256];
-        let (amt, _) = try!(self.conn.recv_from(&mut buf));
+        let (amt, _) = self.conn.recv_from(&mut buf)?;
         let msg = from_utf8(&buf[..amt]).unwrap();
         Ok(serde_json::from_str(&msg).unwrap())
     }

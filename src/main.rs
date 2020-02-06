@@ -1,6 +1,4 @@
 
-#![feature(mpsc_select)]
-
 #[macro_use]
 extern crate serde_derive;
 extern crate rand;
@@ -37,7 +35,7 @@ fn main() {
             .expect("Error creating PeerTransmitter")
             .run(&id);
     });
-    let (peer_tx, peer_rx) = channel::<PeerUpdate<String>>();
+    let (peer_tx, _peer_rx) = channel::<PeerUpdate<String>>();
     thread::spawn(move|| { 
         PeerReceiver::new(PEER_PORT)
             .expect("Error creating PeerReceiver")
@@ -46,7 +44,7 @@ fn main() {
 
     // Spawn broadcast transmitter and receiver
     let (transmit_tx, transmit_rx) = channel::<MyPacket>();
-    let (receive_tx, receive_rx) = channel::<MyPacket>();
+    let (receive_tx, _receive_rx) = channel::<MyPacket>();
     thread::spawn(move|| {
         BcastTransmitter::new(BCAST_PORT)
             .expect("Error creating ")
@@ -70,16 +68,4 @@ fn main() {
             }).unwrap();
         }
     });
-
-    // Start infinite loop waiting on either bcast msg or peer update
-    loop {
-        select! {
-            update = peer_rx.recv() => {
-                println!("{}", update.unwrap());
-            },
-            bcast_msg = receive_rx.recv() => {
-                println!("Got bcast_msg: {:?}", bcast_msg.unwrap());
-            }
-        }
-    }
 }

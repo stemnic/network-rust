@@ -15,11 +15,11 @@ pub struct BcastTransmitter {
 impl BcastTransmitter {
     pub fn new(port: u16) -> io::Result<Self> {
         let conn = {
-            let udp = try!(UdpBuilder::new_v4());
-            try!(udp.reuse_address(true));
-            let socket = try!(udp.bind("0.0.0.0:0"));
-            try!(socket.set_broadcast(true));
-            try!(socket.connect(("255.255.255.255", port)));
+            let udp = UdpBuilder::new_v4()?;
+            udp.reuse_address(true)?;
+            let socket = udp.bind("0.0.0.0:0")?;
+            socket.set_broadcast(true)?;
+            socket.connect(("255.255.255.255", port))?;
             socket
         };
         Ok(BcastTransmitter {
@@ -31,7 +31,7 @@ impl BcastTransmitter {
         where T: serde::ser::Serialize,
     {
         let serialized = serde_json::to_string(&data).unwrap();
-        try!(self.conn.send(serialized.as_bytes()));
+        self.conn.send(serialized.as_bytes())?;
         Ok(())
     }
 
@@ -52,10 +52,10 @@ pub struct BcastReceiver {
 impl BcastReceiver {
     pub fn new(port: u16) -> io::Result<Self> {
         let conn = {
-            let udp = try!(UdpBuilder::new_v4());
-            try!(udp.reuse_address(true));
-            let socket = try!(udp.bind(("255.255.255.255", port)));
-            try!(socket.set_broadcast(true));
+            let udp = UdpBuilder::new_v4()?;
+            udp.reuse_address(true)?;
+            let socket = udp.bind(("255.255.255.255", port))?;
+            socket.set_broadcast(true)?;
             socket
         };
         Ok(BcastReceiver {
@@ -67,7 +67,7 @@ impl BcastReceiver {
         where T: serde::de::Deserialize, 
     {
         let mut buf = [0u8; 1024];
-        let (amt, _) = try!(self.conn.recv_from(&mut buf));
+        let (amt, _) = self.conn.recv_from(&mut buf)?;
         let msg = from_utf8(&buf[..amt]).unwrap();
         Ok(serde_json::from_str(&msg).unwrap())
     }
