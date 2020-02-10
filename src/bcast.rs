@@ -28,7 +28,7 @@ impl BcastTransmitter {
     }
 
     pub fn transmit<'a, T>(&self, data: &'a T) -> io::Result<()> 
-        where T: serde::ser::Serialize,
+        where T: serde::Serialize,
     {
         let serialized = serde_json::to_string(&data).unwrap();
         self.conn.send(serialized.as_bytes())?;
@@ -64,7 +64,7 @@ impl BcastReceiver {
     }
 
     pub fn receive<T>(&self) -> io::Result<T> 
-        where T: serde::de::Deserialize, 
+        where T: serde::de::DeserializeOwned, 
     {
         let mut buf = [0u8; 1024];
         let (amt, _) = self.conn.recv_from(&mut buf)?;
@@ -73,7 +73,7 @@ impl BcastReceiver {
     }
 
     pub fn run<T>(self, bcast_tx: mpsc::Sender<T>) -> !
-        where T: serde::de::Deserialize,
+        where T: serde::de::DeserializeOwned, 
     {
         loop {
             let msg: T = match self.receive() {

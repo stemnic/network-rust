@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use std::fmt;
 
-use serde;
+use serde::{Deserialize, Serialize};
 use serde_json;
 use net2::UdpBuilder;
 
@@ -160,7 +160,7 @@ impl PeerReceiver {
     }
 
     pub fn receive<T>(&self) -> io::Result<T>
-        where T: serde::de::Deserialize, 
+        where T: serde::de::DeserializeOwned, 
     {
         let mut buf = [0u8; 256];
         let (amt, _) = self.conn.recv_from(&mut buf)?;
@@ -169,7 +169,7 @@ impl PeerReceiver {
     }
 
     pub fn run<T>(self, update_tx: mpsc::Sender<PeerUpdate<T>>) -> !
-        where T: serde::de::Deserialize + Hash + Eq + Clone + Ord,
+        where T: serde::de::DeserializeOwned + Hash + Eq + Clone + Ord,
     {
         let mut last_seen = HashMap::new();
         loop {
