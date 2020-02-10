@@ -54,7 +54,7 @@ impl BcastReceiver {
         let conn = {
             let udp = UdpBuilder::new_v4()?;
             udp.reuse_address(true)?;
-            let socket = udp.bind(("255.255.255.255", port))?;
+            let socket = udp.bind(("255.255.255.255", port)).expect("Could not bind UDP socket to network interface");
             socket.set_broadcast(true)?;
             socket
         };
