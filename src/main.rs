@@ -35,7 +35,7 @@ fn main() {
             .expect("Error creating PeerTransmitter")
             .run(&id);
     });
-    let (peer_tx, _peer_rx) = channel::<PeerUpdate<String>>();
+    let (peer_tx, peer_rx) = channel::<PeerUpdate<String>>();
     thread::spawn(move|| { 
         PeerReceiver::new(PEER_PORT)
             .expect("Error creating PeerReceiver")
@@ -44,7 +44,7 @@ fn main() {
 
     // Spawn broadcast transmitter and receiver
     let (transmit_tx, transmit_rx) = channel::<MyPacket>();
-    let (receive_tx, _receive_rx) = channel::<MyPacket>();
+    let (receive_tx, receive_rx) = channel::<MyPacket>();
     thread::spawn(move|| {
         BcastTransmitter::new(BCAST_PORT)
             .expect("Error creating ")
@@ -68,4 +68,20 @@ fn main() {
             }).unwrap();
         }
     });
+
+    // Start infinite loop waiting on either bcast msg or peer update
+    loop {
+        match peer_rx.try_recv() {
+            Ok(update) => {
+                println!("{}", update);
+            },
+            Err(_) => {}
+        }
+        match receive_rx.try_recv() {
+            Ok(msg) => {
+                println!("Got bcast_msg: {:?}", msg);
+            },
+            Err(_) => {}
+        }
+    }
 }
